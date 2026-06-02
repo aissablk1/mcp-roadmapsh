@@ -1,0 +1,10 @@
+{
+  "name": "mcp-roadmapsh", "version": "0.1.0", "private": true,
+  "description": "MCP server for roadmap.sh — developer roadmaps, best practices, interview questions, projects and progress tracking",
+  "author": "Aïssa BELKOUSSA", "license": "MIT", "type": "module",
+  "bin": { "mcp-roadmapsh": "dist/index.js" },
+  "scripts": { "build": "tsc", "dev": "tsx src/index.ts", "inspect": "npx -y @modelcontextprotocol/inspector node dist/index.js", "typecheck": "tsc --noEmit", "test": "node test-all.mjs" },
+  "dependencies": { "@modelcontextprotocol/sdk": "^1.0.4", "zod": "^3.23.8", "zod-to-json-schema": "^3.23.5" },
+  "devDependencies": { "@types/node": "^22.10.0", "tsx": "^4.19.2", "typescript": "^5.7.2" },
+  "engines": { "node": ">=20" }
+}
