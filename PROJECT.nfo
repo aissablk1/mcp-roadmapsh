@@ -1,0 +1,70 @@
+================================================================================
+                                                                                
+   _ __ ___   ___ _ __        _ __ ___   __ _  __| |_ __ ___   __ _ _ __  ___| |__
+  | '_ ` _ \ / __| '_ \      | '__/ _ \ / _` |/ _` | '_ ` _ \ / _` | '_ \/ __| '_ \
+  | | | | | | (__| |_) |     | | | (_) | (_| | (_| | | | | | | (_| | |_) \__ \ | | |
+  |_| |_| |_|\___| .__/      |_|  \___/ \__,_|\__,_|_| |_| |_|\__,_| .__/|___/_| |_|
+                 |_|                                               |_|             
+================================================================================
+
+  Project    : mcp-roadmapsh
+  Tagline    : Serveur MCP pour roadmap.sh — roadmaps, best practices,
+               questions d'entretien, projets, vidéos & suivi de progression
+  Author     : Aïssa BELKOUSSA
+  License    : MIT
+  Created    : 2026-06-02
+  Updated    : 2026-06-02
+  Version    : 0.1.0
+  Status     : actif
+
+--------------------------------------------------------------------------------
+  DESCRIPTION
+--------------------------------------------------------------------------------
+  Expose le contenu de roadmap.sh à un agent LLM via le Model Context Protocol.
+  Couche pédagogique (plans lisibles, recommandation du prochain sujet) et suivi
+  de progression local. Données 100 % officielles : endpoints JSON roadmap.sh +
+  repo open source developer-roadmap (GitHub raw + contents API). Aucun mock.
+
+--------------------------------------------------------------------------------
+  STACK
+--------------------------------------------------------------------------------
+  TypeScript · Node >= 20 · @modelcontextprotocol/sdk · zod · zod-to-json-schema
+  Transport stdio · fetch natif + cache disque (XDG)
+
+--------------------------------------------------------------------------------
+  STRUCTURE
+--------------------------------------------------------------------------------
+  src/sources.ts   constructeurs d'URL + constantes des sources
+  src/fetcher.ts   HTTP + cache TTL + timeout + erreurs normalisées
+  src/format.ts    graphe -> plan lisible (outline)
+  src/progress.ts  état de progression local (JSON)
+  src/tools.ts     schémas zod + handlers des 15 outils
+  src/index.ts     bootstrap serveur + registre d'outils
+  test-all.mjs     test e2e contre les vraies données
+
+--------------------------------------------------------------------------------
+  INSTALL
+--------------------------------------------------------------------------------
+  npm install && npm run build
+
+--------------------------------------------------------------------------------
+  USAGE
+--------------------------------------------------------------------------------
+  node dist/index.js        serveur MCP (stdio)
+  npm run inspect           MCP Inspector
+  npm test                  test e2e (réseau requis)
+
+--------------------------------------------------------------------------------
+  ENV
+--------------------------------------------------------------------------------
+  ROADMAPSH_CACHE_DIR · ROADMAPSH_CACHE_TTL_MS · ROADMAPSH_STATE_DIR
+  ROADMAPSH_TIMEOUT_MS · ROADMAPSH_BRANCH · GITHUB_TOKEN (optionnel)
+
+--------------------------------------------------------------------------------
+  CONTACT
+--------------------------------------------------------------------------------
+  Aïssa BELKOUSSA
+
+================================================================================
+  Copyright (c) 2026 Aïssa BELKOUSSA — MIT License
+================================================================================
