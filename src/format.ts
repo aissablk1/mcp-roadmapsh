@@ -5,10 +5,18 @@ export interface RoadmapGraph { title?: any; description?: string; slug?: string
 const LEARN_TYPES = new Set(["topic", "subtopic"]);
 const SECTION_TYPES = new Set(["title", "section"]);
 
+// roadmap.sh embeds template tokens (e.g. "@currentYear@") in titles, descriptions
+// and topic markdown; the site substitutes them at render time. We do the same so
+// consumers never see raw placeholders. The year is resolved dynamically.
+export function applyVars(s: string): string {
+  if (!s) return s;
+  return s.replace(/@currentYear@/g, String(new Date().getFullYear()));
+}
+
 export function graphTitle(graph: RoadmapGraph): string {
   const t = graph.title;
-  if (typeof t === "string") return t;
-  if (t && typeof t === "object") return t.page ?? t.card ?? graph.slug ?? "";
+  if (typeof t === "string") return applyVars(t);
+  if (t && typeof t === "object") return applyVars(t.page ?? t.card ?? graph.slug ?? "");
   return graph.slug ?? "";
 }
 
@@ -34,7 +42,7 @@ export function toOutline(graph: RoadmapGraph, slug: string): Outline {
   return {
     slug,
     title: graphTitle(graph),
-    description: graph.description,
+    description: graph.description ? applyVars(graph.description) : graph.description,
     topicCount: items.filter((i) => i.type === "topic").length,
     subtopicCount: items.filter((i) => i.type === "subtopic").length,
     items,
@@ -49,5 +57,5 @@ export function renderOutlineText(o: Outline): string {
     const indent = it.type === "subtopic" ? "  - " : it.type === "topic" ? "- " : "## ";
     lines.push(`${indent}${it.label}  [${it.id}]`);
   }
-  return lines.join("\n");
+  return applyVars(lines.join("\n"));
 }

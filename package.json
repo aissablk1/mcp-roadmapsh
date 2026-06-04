@@ -1,10 +1,65 @@
 {
-  "name": "mcp-roadmapsh", "version": "0.1.0", "private": true,
+  "name": "mcp-roadmapsh",
+  "version": "0.1.0",
   "description": "MCP server for roadmap.sh — developer roadmaps, best practices, interview questions, projects and progress tracking",
-  "author": "Aïssa BELKOUSSA", "license": "MIT", "type": "module",
-  "bin": { "mcp-roadmapsh": "dist/index.js" },
-  "scripts": { "build": "tsc", "dev": "tsx src/index.ts", "inspect": "npx -y @modelcontextprotocol/inspector node dist/index.js", "typecheck": "tsc --noEmit", "test": "node test-all.mjs" },
-  "dependencies": { "@modelcontextprotocol/sdk": "^1.0.4", "zod": "^3.23.8", "zod-to-json-schema": "^3.23.5" },
-  "devDependencies": { "@types/node": "^22.10.0", "tsx": "^4.19.2", "typescript": "^5.7.2" },
-  "engines": { "node": ">=20" }
+  "mcpName": "io.github.aissablk1/mcp-roadmapsh",
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "modelcontextprotocol",
+    "mcp-server",
+    "roadmap",
+    "roadmap.sh",
+    "developer-roadmap",
+    "learning",
+    "education",
+    "claude",
+    "claude-code",
+    "ai",
+    "llm",
+    "anthropic"
+  ],
+  "author": "Aïssa BELKOUSSA",
+  "license": "MIT",
+  "type": "module",
+  "homepage": "https://github.com/aissablk1/mcp-roadmapsh#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aissablk1/mcp-roadmapsh.git"
+  },
+  "bugs": {
+    "url": "https://github.com/aissablk1/mcp-roadmapsh/issues"
+  },
+  "bin": {
+    "mcp-roadmapsh": "dist/index.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "PROJECT.nfo",
+    "LICENSE",
+    "server.json"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/index.ts",
+    "inspect": "npx -y @modelcontextprotocol/inspector node dist/index.js",
+    "typecheck": "tsc --noEmit",
+    "test": "node test-all.mjs",
+    "prepare": "npm run build",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8",
+    "zod-to-json-schema": "^3.23.5"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  },
+  "engines": {
+    "node": ">=20"
+  }
 }
