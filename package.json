@@ -1,6 +1,6 @@
 {
   "name": "mcp-roadmapsh",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "MCP server for roadmap.sh — developer roadmaps, best practices, interview questions, projects and progress tracking",
   "mcpName": "io.github.aissablk1/mcp-roadmapsh",
   "keywords": [
