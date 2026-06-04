@@ -26,6 +26,13 @@ async function call(name, args = {}) {
   return JSON.parse(r.content[0].text);
 }
 
+// Asserts a tool call fails (isError) and the message contains `substr`.
+async function expectError(name, label, args, substr) {
+  const r = await client.callTool({ name, arguments: args });
+  const text = r.content?.[0]?.text ?? "";
+  check(label, r.isError === true && (!substr || text.includes(substr)), `isError=${r.isError} text=${text.slice(0, 100)}`);
+}
+
 try {
   await client.connect(transport);
 
@@ -93,6 +100,14 @@ try {
 
   const next = await call("progress_next", { roadmap: "frontend" });
   check("progress_next returns a suggestion", next.done === true || !!next.next?.id);
+
+  // --- Input validation & error-quality hardening (0.2.0) ---
+  await expectError("roadmap_get", "rejects uppercase slug (no /i)", { slug: "Frontend" }, "Invalid arguments");
+  await expectError("roadmap_get", "rejects path-traversal slug", { slug: "../secrets" }, "Invalid arguments");
+  await expectError("roadmap_topic", "rejects non-alphanumeric nodeId", { slug: "frontend", nodeId: "../../etc" }, "Invalid arguments");
+  await expectError("progress_mark", "rejects __proto__ nodeId", { roadmap: "frontend", nodeId: "__proto__", status: "done" }, "Reserved key");
+  const nf = await client.callTool({ name: "roadmap_get", arguments: { slug: "definitely-not-a-real-roadmap-xyz" } });
+  check("roadmap_get 404 suggests roadmap_list", nf.isError === true && (nf.content?.[0]?.text ?? "").includes("roadmap_list"), (nf.content?.[0]?.text ?? "").slice(0, 120));
 
   await client.close();
 } catch (err) {

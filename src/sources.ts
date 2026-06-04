@@ -1,11 +1,24 @@
 // URL builders and constants for roadmap.sh + the open-source developer-roadmap repo.
 export const ROADMAP_BASE = "https://roadmap.sh";
+
+// Validate operator-supplied env values at load time. Without this, a crafted
+// ROADMAPSH_OWNER/ROADMAPSH_BRANCH (e.g. "../../other-repo" or "x/@host") could
+// inject path segments into the GitHub URLs the server fetches. Fail fast.
+function safeEnv(name: string, fallback: string, re: RegExp): string {
+  const value = process.env[name] ?? fallback;
+  if (!re.test(value)) {
+    throw new Error(`Invalid ${name}=${JSON.stringify(value)}: must match ${re}`);
+  }
+  return value;
+}
+
 // The developer-roadmap repo moved from kamranahmedse to nilbuild (2026). The
 // GitHub API follows the rename redirect, but raw.githubusercontent.com does not,
 // so the current owner must be used directly. Override via ROADMAPSH_OWNER.
-export const GH_OWNER = process.env.ROADMAPSH_OWNER ?? "nilbuild";
+export const GH_OWNER = safeEnv("ROADMAPSH_OWNER", "nilbuild", /^[A-Za-z0-9][A-Za-z0-9._-]*$/);
 export const GH_REPO = "developer-roadmap";
-export const GH_BRANCH = process.env.ROADMAPSH_BRANCH ?? "master";
+// Branch names may contain slashes (e.g. "feature/x"), but no path-traversal dots.
+export const GH_BRANCH = safeEnv("ROADMAPSH_BRANCH", "master", /^[A-Za-z0-9][A-Za-z0-9._/-]*$/);
 export const GH_RAW = `https://raw.githubusercontent.com/${GH_OWNER}/${GH_REPO}/${GH_BRANCH}`;
 export const GH_API = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}`;
 

@@ -3,11 +3,31 @@ import {
   roadmapGraphUrl, folderGraphRawUrl, folderMetaRawUrl, folderContentDirPath,
   flatMdRawUrl, dataDir, ghRawUrl, DataType,
 } from "./sources.js";
-import { fetchJson, fetchText, ghListDir, cacheStats } from "./fetcher.js";
+import { fetchJson, fetchText, ghListDir, cacheStats, NotFoundError } from "./fetcher.js";
 import { toOutline, renderOutlineText, graphTitle, applyVars, RoadmapGraph } from "./format.js";
 import * as progress from "./progress.js";
 
-const slug = z.string().min(1).regex(/^[a-z0-9][a-z0-9-]*$/i, "must be kebab-case").describe("roadmap.sh slug, e.g. 'frontend'");
+const slug = z.string().min(1).max(100)
+  .regex(/^[a-z0-9][a-z0-9-]*$/, "must be lowercase kebab-case")
+  .describe("roadmap.sh slug, e.g. 'frontend'");
+
+// Node ids from roadmap.sh graphs are short alphanumeric tokens. Bound them the
+// same way as slugs so an unvalidated value can never influence a fetched path
+// or become an arbitrary object key in the local progress store.
+const nodeId = z.string().min(1).max(128)
+  .regex(/^[A-Za-z0-9_-]+$/, "must be an alphanumeric node id");
+
+// On a 404 the slug almost certainly doesn't exist → point the caller at the
+// matching list tool. Any other failure (network, rate-limit, 5xx) is surfaced
+// as-is so the caller isn't misled into thinking the slug is wrong.
+function withHint(e: unknown, listTool: string): Error {
+  if (e instanceof NotFoundError) return new Error(`${e.message}. Use ${listTool} to discover valid slugs.`);
+  return e instanceof Error ? e : new Error(String(e));
+}
+
+// Map a node id to its content markdown filename (e.g. "title@<id>.md" or "<id>.md").
+const findTopicFile = (mdFiles: string[], id: string): string | undefined =>
+  mdFiles.find((n) => n.endsWith(`@${id}.md`) || n === `${id}.md`);
 
 async function listSlugs(type: DataType): Promise<string[]> {
   const entries = await ghListDir(dataDir(type));
@@ -44,7 +64,7 @@ export const GetRoadmapInput = z.object({ slug, format: z.enum(["raw", "outline"
 export async function getRoadmap(a: z.infer<typeof GetRoadmapInput>) {
   let graph: RoadmapGraph;
   try { graph = await fetchJson<RoadmapGraph>(roadmapGraphUrl(a.slug)); }
-  catch (e: any) { throw new Error(`${e.message}. Use roadmap_list to discover valid slugs.`); }
+  catch (e) { throw withHint(e, "roadmap_list"); }
   if (a.format === "raw") return { slug: a.slug, title: graphTitle(graph), graph };
   const o = toOutline(graph, a.slug);
   return { slug: a.slug, title: o.title, topicCount: o.topicCount, subtopicCount: o.subtopicCount, outline: renderOutlineText(o), items: o.items };
@@ -52,17 +72,17 @@ export async function getRoadmap(a: z.infer<typeof GetRoadmapInput>) {
 
 export const TopicInput = z.object({
   slug,
-  nodeId: z.string().optional().describe("Exact node id from the outline"),
-  query: z.string().optional().describe("Topic title substring, used if nodeId is unknown"),
+  nodeId: nodeId.optional().describe("Exact node id from the outline"),
+  query: z.string().min(1).max(200).optional().describe("Topic title substring, used if nodeId is unknown"),
 }).refine((v) => v.nodeId || v.query, { message: "Provide nodeId or query" });
 export async function topic(a: z.infer<typeof TopicInput>) {
   const dirPath = folderContentDirPath("roadmaps", a.slug);
   let files;
   try { files = await ghListDir(dirPath); }
-  catch (e: any) { throw new Error(`${e.message}. Use roadmap_list to discover valid slugs.`); }
+  catch (e) { throw withHint(e, "roadmap_list"); }
   const mdFiles = files.filter((f) => f.type === "file" && f.name.endsWith(".md")).map((f) => f.name);
   let match: string | undefined;
-  if (a.nodeId) match = mdFiles.find((n) => n.endsWith(`@${a.nodeId}.md`) || n === `${a.nodeId}.md`);
+  if (a.nodeId) match = findTopicFile(mdFiles, a.nodeId);
   if (!match && a.query) {
     const q = a.query.toLowerCase().replace(/\s+/g, "-");
     match = mdFiles.find((n) => n.toLowerCase().includes(q));
@@ -75,7 +95,7 @@ export async function topic(a: z.infer<typeof TopicInput>) {
 }
 
 export const SearchInput = z.object({
-  query: z.string().min(1),
+  query: z.string().min(1).max(200),
   scope: z.enum(["roadmaps", "best-practices", "question-groups", "projects", "videos"]).default("roadmaps"),
 });
 export async function search(a: z.infer<typeof SearchInput>) {
@@ -93,7 +113,7 @@ export const GetBPInput = z.object({ slug, format: z.enum(["raw", "outline"]).de
 export async function getBestPractice(a: z.infer<typeof GetBPInput>) {
   let graph: RoadmapGraph;
   try { graph = await fetchJson<RoadmapGraph>(folderGraphRawUrl("best-practices", a.slug)); }
-  catch (e: any) { throw new Error(`${e.message}. Use best_practices_list to discover valid slugs.`); }
+  catch (e) { throw withHint(e, "best_practices_list"); }
   if (a.format === "raw") return { slug: a.slug, title: graphTitle(graph), graph };
   const o = toOutline(graph, a.slug);
   return { slug: a.slug, title: o.title, itemCount: o.items.length, outline: renderOutlineText(o), items: o.items };
@@ -107,7 +127,7 @@ export const GetQInput = z.object({ slug });
 export async function getQuestions(a: z.infer<typeof GetQInput>) {
   let md: string;
   try { md = await fetchText(folderMetaRawUrl("question-groups", a.slug)); }
-  catch (e: any) { throw new Error(`${e.message}. Use questions_list to discover valid slugs.`); }
+  catch (e) { throw withHint(e, "questions_list"); }
   return { slug: a.slug, markdown: md };
 }
 
@@ -119,7 +139,7 @@ export const GetProjectInput = z.object({ slug });
 export async function getProject(a: z.infer<typeof GetProjectInput>) {
   let md: string;
   try { md = await fetchText(flatMdRawUrl("projects", a.slug)); }
-  catch (e: any) { throw new Error(`${e.message}. Use projects_list to discover valid slugs.`); }
+  catch (e) { throw withHint(e, "projects_list"); }
   return { slug: a.slug, markdown: md };
 }
 
@@ -128,7 +148,7 @@ export async function listVideos() { const slugs = await listSlugs("videos"); re
 
 /* ---------- progress ---------- */
 const statusEnum = z.enum(["learning", "done", "skip"]);
-export const MarkInput = z.object({ roadmap: slug, nodeId: z.string().min(1), status: statusEnum, label: z.string().optional() });
+export const MarkInput = z.object({ roadmap: slug, nodeId, status: statusEnum, label: z.string().max(300).optional() });
 export async function progressMark(a: z.infer<typeof MarkInput>) {
   const entry = progress.mark(a.roadmap, a.nodeId, a.status, a.label);
   return { roadmap: a.roadmap, nodeId: a.nodeId, entry };
@@ -159,6 +179,7 @@ export async function progressNext(a: z.infer<typeof NextInput>) {
 
 /* ---------- export ---------- */
 // Bounded-concurrency map so a 120-topic roadmap doesn't open 120 sockets at once.
+// `fn` must be infallible (handle its own errors) — a throw rejects the whole batch.
 async function mapPool<T, R>(items: T[], limit: number, fn: (item: T) => Promise<R>): Promise<R[]> {
   const out: R[] = new Array(items.length);
   let idx = 0;
@@ -192,7 +213,7 @@ export async function exportRoadmap(a: z.infer<typeof ExportInput>) {
   const asFormat = (md: string) => (a.format === "text" ? toPlainText(md) : md);
   let graph: RoadmapGraph;
   try { graph = await fetchJson<RoadmapGraph>(roadmapGraphUrl(a.slug)); }
-  catch (e: any) { throw new Error(`${e.message}. Use roadmap_list to discover valid slugs.`); }
+  catch (e) { throw withHint(e, "roadmap_list"); }
   const o = toOutline(graph, a.slug);
   const learnItems = o.items.filter((i) => i.type === "topic" || i.type === "subtopic");
 
@@ -204,15 +225,14 @@ export async function exportRoadmap(a: z.infer<typeof ExportInput>) {
   const dirPath = folderContentDirPath("roadmaps", a.slug);
   let files;
   try { files = await ghListDir(dirPath); }
-  catch (e: any) { throw new Error(`${e.message}. Use roadmap_list to discover valid slugs.`); }
+  catch (e) { throw withHint(e, "roadmap_list"); }
   const mdFiles = files.filter((f) => f.type === "file" && f.name.endsWith(".md")).map((f) => f.name);
-  const fileFor = (id: string) => mdFiles.find((n) => n.endsWith(`@${id}.md`) || n === `${id}.md`);
 
   const capped = typeof a.maxTopics === "number" && a.maxTopics < learnItems.length;
   const targets = capped ? learnItems.slice(0, a.maxTopics) : learnItems;
 
   const sections = await mapPool(targets, 8, async (it) => {
-    const file = fileFor(it.id);
+    const file = findTopicFile(mdFiles, it.id);
     if (!file) return { it, ok: false, content: "" };
     try { return { it, ok: true, content: await fetchText(ghRawUrl(`${dirPath}/${file}`)) }; }
     catch { return { it, ok: false, content: "" }; }

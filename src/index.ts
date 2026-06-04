@@ -29,7 +29,7 @@ const tools: ToolDef[] = [
   ro("progress_next", "Recommend the next unlearned topic for a roadmap based on local progress.", T.NextInput, T.progressNext),
 ];
 
-const server = new Server({ name: "mcp-roadmapsh", version: "0.1.0" }, { capabilities: { tools: {} } });
+const server = new Server({ name: "mcp-roadmapsh", version: "0.2.0" }, { capabilities: { tools: {} } });
 
 server.setRequestHandler(ListToolsRequestSchema, async () => ({
   tools: tools.map((t) => ({
@@ -49,7 +49,7 @@ server.setRequestHandler(CallToolRequestSchema, async (req) => {
   } catch (err) {
     const msg = err instanceof z.ZodError
       ? `Invalid arguments: ${err.errors.map((e) => `${e.path.join(".")} ${e.message}`).join("; ")}`
-      : (err as Error).message;
+      : String((err as any)?.message ?? err);
     return { isError: true, content: [{ type: "text", text: msg }] };
   }
 });
