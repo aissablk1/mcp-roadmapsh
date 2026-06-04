@@ -4,7 +4,7 @@ import {
   flatMdRawUrl, dataDir, ghRawUrl, DataType,
 } from "./sources.js";
 import { fetchJson, fetchText, ghListDir, cacheStats } from "./fetcher.js";
-import { toOutline, renderOutlineText, graphTitle, RoadmapGraph } from "./format.js";
+import { toOutline, renderOutlineText, graphTitle, applyVars, RoadmapGraph } from "./format.js";
 import * as progress from "./progress.js";
 
 const slug = z.string().min(1).regex(/^[a-z0-9][a-z0-9-]*$/i, "must be kebab-case").describe("roadmap.sh slug, e.g. 'frontend'");
@@ -70,7 +70,7 @@ export async function topic(a: z.infer<typeof TopicInput>) {
   if (!match) {
     return { slug: a.slug, matched: false, hint: "No matching topic. Pass an exact nodeId from roadmap_get(format=outline).", candidates: mdFiles.slice(0, 30) };
   }
-  const content = await fetchText(ghRawUrl(`${dirPath}/${match}`));
+  const content = applyVars(await fetchText(ghRawUrl(`${dirPath}/${match}`)));
   return { slug: a.slug, matched: true, file: match, content };
 }
 
@@ -227,5 +227,5 @@ export async function exportRoadmap(a: z.infer<typeof ExportInput>) {
     if (s.ok) { parts.push(s.content.trim(), ""); fetched++; }
     else { parts.push("_(no content available)_", ""); missing++; }
   }
-  return { slug: a.slug, title: o.title, includeContent: true, format: a.format, topicsExported: targets.length, totalTopics: learnItems.length, fetched, missing, capped, document: asFormat(parts.join("\n")) };
+  return { slug: a.slug, title: o.title, includeContent: true, format: a.format, topicsExported: targets.length, totalTopics: learnItems.length, fetched, missing, capped, document: asFormat(applyVars(parts.join("\n"))) };
 }

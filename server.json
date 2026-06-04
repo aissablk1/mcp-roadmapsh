@@ -1,0 +1,20 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.aissablk1/mcp-roadmapsh",
+  "description": "MCP server for roadmap.sh — developer roadmaps, best practices, interview questions, projects and progress tracking",
+  "version": "0.1.0",
+  "repository": {
+    "url": "https://github.com/aissablk1/mcp-roadmapsh",
+    "source": "github"
+  },
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "mcp-roadmapsh",
+      "version": "0.1.0",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}

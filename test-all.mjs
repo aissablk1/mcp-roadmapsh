@@ -43,6 +43,7 @@ try {
   const fe = await call("roadmap_get", { slug: "frontend", format: "outline" });
   check("roadmap_get outline has topics", fe.topicCount > 0, `topicCount=${fe.topicCount}`);
   check("roadmap_get outline text non-empty", typeof fe.outline === "string" && fe.outline.length > 50);
+  check("roadmap_get outline substitutes @currentYear@", !fe.outline.includes("@currentYear@"), "raw placeholder leaked");
   const firstTopic = fe.items.find((i) => i.type === "topic");
   check("roadmap_get has a topic node id", !!firstTopic);
 
