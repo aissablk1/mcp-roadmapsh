@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build
+        run: npm run build
+
+      # Offline, deterministic tests — these gate the pipeline.
+      - name: Unit tests (offline)
+        run: npm run test:unit
+
+      # End-to-end tests hit roadmap.sh + the GitHub API live. They are valuable
+      # (real data, no mocks) but can flake on rate limits, so they are reported
+      # without blocking the build. GITHUB_TOKEN raises the API rate limit.
+      - name: E2E tests (live network, non-blocking)
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm test

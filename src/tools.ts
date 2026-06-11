@@ -189,7 +189,7 @@ async function mapPool<T, R>(items: T[], limit: number, fn: (item: T) => Promise
 }
 
 // Strips common markdown syntax to plain text (LLM-friendly export, no external API).
-function toPlainText(md: string): string {
+export function toPlainText(md: string): string {
   return md
     .replace(/```[\s\S]*?```/g, (b) => b.replace(/```/g, "").trim())
     .replace(/!\[[^\]]*\]\([^)]*\)/g, "")

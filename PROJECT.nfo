@@ -13,7 +13,7 @@
   Author     : Aïssa BELKOUSSA
   License    : MIT
   Created    : 2026-06-02
-  Updated    : 2026-06-04
+  Updated    : 2026-06-11
   Version    : 0.2.0
   Status     : actif
 
@@ -39,8 +39,11 @@
   src/format.ts    graphe -> plan lisible (outline)
   src/progress.ts  état de progression local (JSON)
   src/tools.ts     schémas zod (validation stricte) + handlers des 16 outils
+  src/version.ts   version unique lue depuis package.json (runtime)
   src/index.ts     bootstrap serveur + registre d'outils
+  test-unit.mjs    tests offline des fonctions pures (sans réseau)
   test-all.mjs     test e2e contre les vraies données
+  .github/         workflow CI (typecheck + build + tests)
 
 --------------------------------------------------------------------------------
   INSTALL
@@ -52,6 +55,7 @@
 --------------------------------------------------------------------------------
   node dist/index.js        serveur MCP (stdio)
   npm run inspect           MCP Inspector
+  npm run test:unit         tests offline (sans réseau)
   npm test                  test e2e (réseau requis)
 
 --------------------------------------------------------------------------------

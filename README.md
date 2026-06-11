@@ -82,6 +82,7 @@ npm run inspect    # open the MCP Inspector
 | `ROADMAPSH_CACHE_TTL_MS` | `86400000` (24 h) | Cache TTL |
 | `ROADMAPSH_STATE_DIR` | `~/.local/state/mcp-roadmapsh` | Progress state |
 | `ROADMAPSH_TIMEOUT_MS` | `20000` | HTTP timeout |
+| `ROADMAPSH_OWNER` | `nilbuild` | GitHub owner of the developer-roadmap repo |
 | `ROADMAPSH_BRANCH` | `master` | developer-roadmap branch |
 | `GITHUB_TOKEN` | — | Optional, raises GitHub API rate limit |
 

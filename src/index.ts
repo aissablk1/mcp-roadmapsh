@@ -5,6 +5,7 @@ import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprot
 import { z, ZodTypeAny } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import * as T from "./tools.js";
+import { VERSION } from "./version.js";
 
 interface ToolDef { name: string; description: string; schema: ZodTypeAny; handler: (a: any) => any; readOnly: boolean }
 const ro = (name: string, description: string, schema: ZodTypeAny, handler: (a: any) => any): ToolDef =>
@@ -29,7 +30,7 @@ const tools: ToolDef[] = [
   ro("progress_next", "Recommend the next unlearned topic for a roadmap based on local progress.", T.NextInput, T.progressNext),
 ];
 
-const server = new Server({ name: "mcp-roadmapsh", version: "0.2.0" }, { capabilities: { tools: {} } });
+const server = new Server({ name: "mcp-roadmapsh", version: VERSION }, { capabilities: { tools: {} } });
 
 server.setRequestHandler(ListToolsRequestSchema, async () => ({
   tools: tools.map((t) => ({

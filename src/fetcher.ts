@@ -3,6 +3,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync, readdirSync } from 
 import { join } from "node:path";
 import { homedir } from "node:os";
 import { ghContentsUrl } from "./sources.js";
+import { VERSION } from "./version.js";
 
 // Parse a non-negative-integer env var, falling back when unset, empty, or
 // non-numeric. Number("") === 0 would otherwise silently disable the cache or
@@ -17,7 +18,7 @@ function envInt(name: string, fallback: number): number {
 const DEFAULT_TTL_MS = envInt("ROADMAPSH_CACHE_TTL_MS", 24 * 60 * 60 * 1000);
 // A 0/invalid timeout would abort every request instantly, so force a sane floor.
 const TIMEOUT_MS = envInt("ROADMAPSH_TIMEOUT_MS", 20_000) || 20_000;
-const USER_AGENT = "mcp-roadmapsh/0.2.0 (+https://roadmap.sh)";
+const USER_AGENT = `mcp-roadmapsh/${VERSION} (+https://roadmap.sh)`;
 
 /** Thrown on HTTP 404 so callers can distinguish "no such slug" from a real
  *  network/server failure and tailor their guidance accordingly. */
